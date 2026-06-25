@@ -1,5 +1,7 @@
 import { type Address, type Chain, defineChain } from "viem";
 
+import { BRAND } from "@/config/brand";
+
 /**
  * How a network performs the migration:
  * - `wrapper`: Data Network. Unwrap WIP to native (`withdraw`), re-wrap into WDATA
@@ -115,6 +117,7 @@ export const NETWORKS: Record<number, NetworkConfig> = {
       symbol: "WDATA",
       name: "Wrapped DATA",
       decimals: 18,
+      image: BRAND.token.WDATA.png,
     },
   },
   [aeneid.id]: {
@@ -133,6 +136,7 @@ export const NETWORKS: Record<number, NetworkConfig> = {
       symbol: "WDATA",
       name: "Wrapped DATA",
       decimals: 18,
+      image: BRAND.token.WDATA.png,
     },
   },
   [bsc.id]: {
@@ -155,6 +159,7 @@ export const NETWORKS: Record<number, NetworkConfig> = {
       symbol: "WDATAIP",
       name: "Wrapped DATAIP",
       decimals: 18,
+      image: BRAND.token.WDATA.png,
     },
     ...(bscMigration ? { migration: bscMigration } : {}),
   },
@@ -174,6 +179,7 @@ export const NETWORKS: Record<number, NetworkConfig> = {
       symbol: "WDATAIP",
       name: "Wrapped DATAIP",
       decimals: 18,
+      image: BRAND.token.WDATA.png,
     },
     ...(bscTestnetMigration ? { migration: bscTestnetMigration } : {}),
   },

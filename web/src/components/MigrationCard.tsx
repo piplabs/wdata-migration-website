@@ -8,6 +8,7 @@ import { useAccount, useReadContract } from "wagmi";
 import { MigrationDialog } from "@/components/MigrationDialog";
 import { UpdateRpcButton } from "@/components/UpdateRpcButton";
 import { Button } from "@/components/ui/Button";
+import { BRAND } from "@/config/brand";
 import { erc20Abi } from "@/config/abis";
 import { type NetworkConfig, NETWORKS, chainIdFor } from "@/config/networks";
 import { formatAmount } from "@/lib/format";
@@ -46,11 +47,13 @@ function TokenPanel({
   label,
   symbol,
   name,
+  iconUrl,
   children,
 }: {
   label: string;
   symbol: string;
   name: string;
+  iconUrl: string;
   children?: React.ReactNode;
 }) {
   return (
@@ -62,9 +65,12 @@ function TokenPanel({
         {children}
       </div>
       <div className="mt-2 flex items-center gap-2">
-        <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[color:var(--color-border-strong)] bg-[color:var(--color-surface-2)] text-xs font-semibold">
-          {symbol.slice(0, 2)}
-        </span>
+        {/* eslint-disable-next-line @next/next/no-img-element -- remote brand asset */}
+        <img
+          src={iconUrl}
+          alt={symbol}
+          className="h-8 w-8 rounded-full bg-[color:var(--color-surface-2)]"
+        />
         <div>
           <p className="text-sm font-semibold">{symbol}</p>
           <p className="text-xs text-[color:var(--color-muted)]">{name}</p>
@@ -157,6 +163,7 @@ export function MigrationCard() {
           label="From"
           symbol={network.from.symbol}
           name={network.from.name}
+          iconUrl={BRAND.token.WIP.png}
         >
           <span className="text-xs text-[color:var(--color-muted)]">
             Balance: {formatAmount(balanceValue, network.from.decimals)}
@@ -187,7 +194,12 @@ export function MigrationCard() {
           </div>
         </div>
 
-        <TokenPanel label="To" symbol={network.to.symbol} name={network.to.name} />
+        <TokenPanel
+          label="To"
+          symbol={network.to.symbol}
+          name={network.to.name}
+          iconUrl={BRAND.token.WDATA.svg}
+        />
       </div>
 
       <div className="mt-6">
