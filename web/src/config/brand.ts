@@ -8,7 +8,7 @@ export const BRAND = {
   /** Square symbol mark, white — for favicons / compact spots. */
   symbolWhite: `${CDN}/Symbol/TDF_Symbol_White.svg`,
   token: {
-    /** Native DATA token mark; stands in for the wrapped IP (WIP / wIP) source token. */
+    /** Native DATA token mark. */
     DATA: {
       svg: `${CDN}/Token/DATA/TDF_Token_DATA.svg`,
       png: `${CDN}/Token/DATA/TDF_Token_DATA.png`,
@@ -17,6 +17,10 @@ export const BRAND = {
     WDATA: {
       svg: `${CDN}/Token/WDATA/TDF_Token_WDATA.svg`,
       png: `${CDN}/Token/WDATA/TDF_Token_WDATA.png`,
+    },
+    /** Wrapped IP source token (WIP / wIP) — logo from datanetscan.io, vendored locally. */
+    WIP: {
+      png: "/tokens/wip.png",
     },
   },
 } as const;

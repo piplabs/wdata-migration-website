@@ -163,7 +163,7 @@ export function MigrationCard() {
           label="From"
           symbol={network.from.symbol}
           name={network.from.name}
-          iconUrl={BRAND.token.DATA.svg}
+          iconUrl={BRAND.token.WIP.png}
         >
           <span className="text-xs text-[color:var(--color-muted)]">
             Balance: {formatAmount(balanceValue, network.from.decimals)}
