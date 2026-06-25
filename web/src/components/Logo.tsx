@@ -1,14 +1,12 @@
+import { BRAND } from "@/config/brand";
+
 export function Logo() {
   return (
-    <span className="flex items-center gap-2.5 select-none">
-      <span
-        className="flex h-8 w-8 items-center justify-center rounded-lg border border-[color:var(--color-border-strong)] bg-[color:var(--color-surface-2)] font-[family-name:var(--font-display)] text-sm font-bold"
-        aria-hidden="true"
-      >
-        D
-      </span>
-      <span className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight">
-        DATA Migration
+    <span className="flex items-center gap-3 select-none">
+      {/* eslint-disable-next-line @next/next/no-img-element -- remote brand SVG, not optimizable */}
+      <img src={BRAND.logoWhite} alt="Data Foundation" className="h-7 w-auto" />
+      <span className="hidden font-[family-name:var(--font-display)] text-sm font-medium text-[color:var(--color-muted)] sm:inline">
+        Migration
       </span>
     </span>
   );
