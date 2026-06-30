@@ -30,8 +30,8 @@ BscScan's number fields have a small **`× 10^18`** helper next to them — use 
 
 1. Open the wIP contract → **Contract → Write Contract**:
    [bscscan.com/address/0x4d6394bC…527107#writeContract](https://bscscan.com/address/0x4d6394bC3031F751EdcE368C189b0E060b527107#writeContract)
-2. Click **Connect to Web3** and connect your wallet.
-3. Find **`approve`** and fill in:
+2. Click **Connect Wallet** and connect your wallet.
+3. Find **`approve`** (function **1** in the list) and fill in:
    - `spender` = `0x093F607c32fCd57C2f008E47c8e16cccaE2cE0B8` (the migration contract)
    - `amount` = how much wIP you want to migrate, **in wei**
 4. Click **Write** and confirm in your wallet.
@@ -40,15 +40,9 @@ BscScan's number fields have a small **`× 10^18`** helper next to them — use 
 
 1. Open the migration contract → **Contract → Write Contract**:
    [bscscan.com/address/0x093F607c…E0B8#writeContract](https://bscscan.com/address/0x093F607c32fCd57C2f008E47c8e16cccaE2cE0B8#writeContract)
-2. Click **Connect to Web3**.
-3. Find **`migrate`** and set `amount` = the **same** wei amount you approved in Step 1.
+2. Click **Connect Wallet** and connect your wallet.
+3. Find **`migrate`** (function **2** in the list) and set `amount` = the **same** wei amount you approved in Step 1.
 4. Click **Write** and confirm. You receive the same amount of **WDATAIP**, 1:1.
-
-## Step 3 — See your WDATAIP
-
-In your wallet, **import / add token** using the WDATAIP address `0xA37EDed373c5cdF88644db7C6b89f222e756aFB2`.
-Your balance should equal what you migrated.
-
 
 ## Troubleshooting
 
@@ -59,4 +53,3 @@ Your balance should equal what you migrated.
 ## Notes
 
 - 1:1, no protocol fee — you only pay BSC gas.
-- One-way only: there is no un-migrate.
