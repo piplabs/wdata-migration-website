@@ -68,30 +68,38 @@ const ZERO = "0x0000000000000000000000000000000000000000" as Address;
 const bscMigration = asAddress(env("NEXT_PUBLIC_BSC_MIGRATION_ADDRESS"));
 const bscTestnetMigration = asAddress(env("NEXT_PUBLIC_BSC_TESTNET_MIGRATION_ADDRESS"));
 
-export const dataNetwork: Chain = defineChain({
-  id: 1514,
-  name: "Data Network",
-  nativeCurrency: DATA_CURRENCY,
-  rpcUrls: {
-    default: { http: [env("NEXT_PUBLIC_DATA_RPC_URL", "https://mainnet.datarpc.io")] },
-  },
-  blockExplorers: {
-    default: { name: "DATA Network Explorer", url: "https://datanetscan.io" },
-  },
-});
+export const dataNetwork = {
+  ...defineChain({
+    id: 1514,
+    name: "Data Network",
+    nativeCurrency: DATA_CURRENCY,
+    rpcUrls: {
+      default: { http: [env("NEXT_PUBLIC_DATA_RPC_URL", "https://mainnet.datarpc.io")] },
+    },
+    blockExplorers: {
+      default: { name: "DATA Network Explorer", url: "https://datanetscan.io" },
+    },
+  }),
+  iconUrl: BRAND.token.DATA.png,
+  iconBackground: "#ffffff",
+};
 
-export const aeneid: Chain = defineChain({
-  id: 1315,
-  name: "Aeneid Data Network",
-  nativeCurrency: DATA_CURRENCY,
-  rpcUrls: {
-    default: { http: [env("NEXT_PUBLIC_AENEID_RPC_URL", "https://aeneid.datarpc.io")] },
-  },
-  blockExplorers: {
-    default: { name: "Aeneid Explorer", url: "https://aeneid.datanetscan.io" },
-  },
-  testnet: true,
-});
+export const aeneid = {
+  ...defineChain({
+    id: 1315,
+    name: "Aeneid Data Network",
+    nativeCurrency: DATA_CURRENCY,
+    rpcUrls: {
+      default: { http: [env("NEXT_PUBLIC_AENEID_RPC_URL", "https://aeneid.datarpc.io")] },
+    },
+    blockExplorers: {
+      default: { name: "Aeneid Explorer", url: "https://aeneid.datanetscan.io" },
+    },
+    testnet: true,
+  }),
+  iconUrl: BRAND.token.DATA.png,
+  iconBackground: "#ffffff",
+};
 
 export const bsc: Chain = defineChain({
   id: 56,

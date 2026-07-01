@@ -148,7 +148,7 @@ export function MigrationCard() {
     if (amountWei === 0n) return "Enter an amount";
     if (exceedsBalance) return "Insufficient balance";
     if (exceedsReserve) return "Insufficient reserve";
-    return `Swap to ${network.to.symbol}`;
+    return isConnected ? "Migrate" : "Connect Wallet & Migrate";
   })();
 
   // The Swap button connects the wallet first when disconnected, then proceeds
@@ -167,6 +167,12 @@ export function MigrationCard() {
       return;
     }
     setDialogOpen(true);
+  };
+
+  const setPercent = (pct: bigint) => {
+    setAmountInput(
+      formatAmount((balanceValue * pct) / 100n, network.from.decimals, 18),
+    );
   };
 
   return (
@@ -221,16 +227,25 @@ export function MigrationCard() {
               }}
               className="w-full bg-transparent text-2xl font-semibold outline-none placeholder:text-[color:var(--color-muted)]"
             />
-            <button
-              onClick={() =>
-                setAmountInput(formatAmount(balanceValue, network.from.decimals, 18))
-              }
-              disabled={balanceValue === 0n}
-              className="rounded-lg border border-[color:var(--color-border-strong)] px-2.5 py-1 text-xs font-medium text-[color:var(--color-muted)] transition-colors hover:text-[color:var(--color-fg)] disabled:opacity-40"
-            >
-              MAX
-            </button>
+            <div className="flex shrink-0 gap-1">
+              {([25n, 50n, 100n] as const).map((pct) => (
+                <button
+                  key={String(pct)}
+                  onClick={() => setPercent(pct)}
+                  disabled={balanceValue === 0n}
+                  className="rounded-lg border border-[color:var(--color-border-strong)] px-2 py-1 text-xs font-medium text-[color:var(--color-muted)] transition-colors hover:text-[color:var(--color-fg)] disabled:opacity-40"
+                >
+                  {pct === 100n ? "MAX" : `${pct}%`}
+                </button>
+              ))}
+            </div>
           </div>
+        </div>
+
+        <div className="flex justify-center">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-sm text-[color:var(--color-muted)]">
+            ↓
+          </span>
         </div>
 
         <TokenPanel
