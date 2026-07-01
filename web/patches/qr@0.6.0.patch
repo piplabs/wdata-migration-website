@@ -1,0 +1,11 @@
+diff --git a/index.js b/index.js
+--- a/index.js
++++ b/index.js
+@@ -1564,5 +1564,5 @@
+     const border = _opts.border === undefined ? 2 : _opts.border;
+-    if (!Number.isSafeInteger(border) || border <= 0)
++    if (!Number.isSafeInteger(border) || border < 0)
+         throw new Error(`invalid border=${border}`);
+-    res = res.border(border, false); // Add border
++    if (border > 0) res = res.border(border, false); // Add border
+     if (_opts.scale !== undefined)
