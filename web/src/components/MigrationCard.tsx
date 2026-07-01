@@ -109,12 +109,13 @@ export function MigrationCard() {
   // lockMint dispenses from a pre-funded reserve; read it so we can block an
   // over-reserve amount up front instead of letting migrate() revert (which some
   // RPCs surface as an opaque "gas limit too high" instead of insufficient reserve).
+  const hasReserveGate = network.flow === "lockMint" && Boolean(network.migration);
   const reserve = useReadContract({
     abi: migrationAbi,
     address: network.migration,
     functionName: "availableWdataip",
     chainId: network.chain.id,
-    query: { enabled: network.flow === "lockMint" && Boolean(network.migration) },
+    query: { enabled: hasReserveGate },
   });
 
   const amountWei = useMemo(() => {
@@ -129,12 +130,11 @@ export function MigrationCard() {
   const balanceValue = balance.data ?? 0n;
   const reserveValue = reserve.data ?? 0n;
   const onWrongChain = isConnected && chainId !== network.chain.id;
-  const exceedsBalance = amountWei > balanceValue;
-  const exceedsReserve =
-    network.flow === "lockMint" &&
-    Boolean(network.migration) &&
-    reserve.isSuccess &&
-    amountWei > reserveValue;
+  // Gate both on isSuccess so a not-yet-loaded / failed read is not misread as
+  // "0" (which would falsely block a valid swap and, right after connect, defeat
+  // connect-then-swap by leaving canSwap false while the balance is still loading).
+  const exceedsBalance = balance.isSuccess && amountWei > balanceValue;
+  const exceedsReserve = hasReserveGate && reserve.isSuccess && amountWei > reserveValue;
   const canSwap =
     isConnected &&
     !onWrongChain &&
@@ -156,9 +156,9 @@ export function MigrationCard() {
   useEffect(() => {
     if (pendingSwap && isConnected) {
       setPendingSwap(false);
-      if (!onWrongChain && canSwap) setDialogOpen(true);
+      if (canSwap) setDialogOpen(true);
     }
-  }, [pendingSwap, isConnected, onWrongChain, canSwap]);
+  }, [pendingSwap, isConnected, canSwap]);
 
   const onPrimaryAction = () => {
     if (!isConnected) {
@@ -247,14 +247,10 @@ export function MigrationCard() {
         ) : (
           <Button
             className="w-full"
-            disabled={!migrationReady || (isConnected && !canSwap)}
+            disabled={!migrationReady || amountWei === 0n || (isConnected && !canSwap)}
             onClick={onPrimaryAction}
           >
-            {isConnected
-              ? swapLabel
-              : migrationReady
-                ? `Swap to ${network.to.symbol}`
-                : "Migration unavailable"}
+            {swapLabel}
           </Button>
         )}
       </div>

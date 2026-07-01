@@ -8,7 +8,7 @@ import {
   writeContract,
 } from "@wagmi/core";
 import { useCallback, useMemo, useState } from "react";
-import { type Address, erc20Abi as erc20MetadataAbi } from "viem";
+import type { Address } from "viem";
 import { useConfig } from "wagmi";
 
 import { erc20Abi, migrationAbi, wrapperAbi } from "@/config/abis";
@@ -179,30 +179,39 @@ export function useMigration(
       try {
         if (step.isWatchAsset) {
           setStatus(index, "awaitingWallet");
-          // MetaMask rejects wallet_watchAsset with -32602 when the passed symbol/
-          // decimals differ from the token's on-chain values, so read them from the
-          // contract instead of trusting config (a testnet OFT may report a different
-          // symbol than the mainnet token the UI is branded for).
-          const [onchainSymbol, onchainDecimals] = await Promise.all([
-            readContract(config, {
-              abi: erc20MetadataAbi,
-              address: network.to.address,
-              functionName: "symbol",
-              chainId: network.chain.id,
-            }),
-            readContract(config, {
-              abi: erc20MetadataAbi,
-              address: network.to.address,
-              functionName: "decimals",
-              chainId: network.chain.id,
-            }),
-          ]);
+          // MetaMask rejects wallet_watchAsset (-32602) when the passed symbol/
+          // decimals differ from the token's on-chain values, so prefer on-chain
+          // metadata. Fall back to config if the reads fail: the migration has
+          // already succeeded by this step, so a failed metadata read must not mark
+          // it errored and make a completed swap look failed.
+          let assetSymbol = network.to.symbol;
+          let assetDecimals = network.to.decimals;
+          try {
+            const [onchainSymbol, onchainDecimals] = await Promise.all([
+              readContract(config, {
+                abi: erc20Abi,
+                address: network.to.address,
+                functionName: "symbol",
+                chainId: network.chain.id,
+              }),
+              readContract(config, {
+                abi: erc20Abi,
+                address: network.to.address,
+                functionName: "decimals",
+                chainId: network.chain.id,
+              }),
+            ]);
+            assetSymbol = onchainSymbol;
+            assetDecimals = onchainDecimals;
+          } catch {
+            // keep the configured symbol/decimals
+          }
           await watchAsset(config, {
             type: "ERC20",
             options: {
               address: network.to.address,
-              symbol: onchainSymbol,
-              decimals: onchainDecimals,
+              symbol: assetSymbol,
+              decimals: assetDecimals,
               ...(network.to.image ? { image: network.to.image } : {}),
             },
           });
