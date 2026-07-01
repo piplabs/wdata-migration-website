@@ -31,8 +31,29 @@ export interface NetworkConfig {
   migration?: Address;
 }
 
+// Next.js inlines NEXT_PUBLIC_* into the client bundle only when referenced by literal
+// name at build time; a dynamic process.env[key] resolves to undefined in the browser.
+// So every var is listed literally here and env() just reads this statically-inlined map.
+const PUBLIC_ENV: Record<string, string | undefined> = {
+  NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID,
+  NEXT_PUBLIC_DATA_RPC_URL: process.env.NEXT_PUBLIC_DATA_RPC_URL,
+  NEXT_PUBLIC_DATA_WIP_ADDRESS: process.env.NEXT_PUBLIC_DATA_WIP_ADDRESS,
+  NEXT_PUBLIC_DATA_WDATA_ADDRESS: process.env.NEXT_PUBLIC_DATA_WDATA_ADDRESS,
+  NEXT_PUBLIC_AENEID_RPC_URL: process.env.NEXT_PUBLIC_AENEID_RPC_URL,
+  NEXT_PUBLIC_AENEID_WIP_ADDRESS: process.env.NEXT_PUBLIC_AENEID_WIP_ADDRESS,
+  NEXT_PUBLIC_AENEID_WDATA_ADDRESS: process.env.NEXT_PUBLIC_AENEID_WDATA_ADDRESS,
+  NEXT_PUBLIC_BSC_RPC_URL: process.env.NEXT_PUBLIC_BSC_RPC_URL,
+  NEXT_PUBLIC_BSC_WIP_ADDRESS: process.env.NEXT_PUBLIC_BSC_WIP_ADDRESS,
+  NEXT_PUBLIC_BSC_WDATAIP_ADDRESS: process.env.NEXT_PUBLIC_BSC_WDATAIP_ADDRESS,
+  NEXT_PUBLIC_BSC_MIGRATION_ADDRESS: process.env.NEXT_PUBLIC_BSC_MIGRATION_ADDRESS,
+  NEXT_PUBLIC_BSC_TESTNET_RPC_URL: process.env.NEXT_PUBLIC_BSC_TESTNET_RPC_URL,
+  NEXT_PUBLIC_BSC_TESTNET_WIP_ADDRESS: process.env.NEXT_PUBLIC_BSC_TESTNET_WIP_ADDRESS,
+  NEXT_PUBLIC_BSC_TESTNET_WDATAIP_ADDRESS: process.env.NEXT_PUBLIC_BSC_TESTNET_WDATAIP_ADDRESS,
+  NEXT_PUBLIC_BSC_TESTNET_MIGRATION_ADDRESS: process.env.NEXT_PUBLIC_BSC_TESTNET_MIGRATION_ADDRESS,
+};
+
 const env = (key: string, fallback = ""): string =>
-  (process.env[key] as string | undefined)?.trim() || fallback;
+  (PUBLIC_ENV[key] ?? "").trim() || fallback;
 
 const asAddress = (value: string): Address | undefined =>
   /^0x[0-9a-fA-F]{40}$/.test(value) ? (value as Address) : undefined;
@@ -208,4 +229,4 @@ export const WALLET_CONNECT_PROJECT_ID = env(
   "NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID",
 );
 
-export const LEARN_MORE_URL = "https://datafnd.org";
+export const LEARN_MORE_URL = "https://datafdn.org";

@@ -1,7 +1,7 @@
 "use client";
 
-import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useMemo, useState } from "react";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { useEffect, useMemo, useState } from "react";
 import { parseUnits } from "viem";
 import { useAccount, useReadContract } from "wagmi";
 
@@ -9,7 +9,7 @@ import { MigrationDialog } from "@/components/MigrationDialog";
 import { UpdateRpcButton } from "@/components/UpdateRpcButton";
 import { Button } from "@/components/ui/Button";
 import { BRAND } from "@/config/brand";
-import { erc20Abi } from "@/config/abis";
+import { erc20Abi, migrationAbi } from "@/config/abis";
 import { type NetworkConfig, NETWORKS, chainIdFor } from "@/config/networks";
 import { formatAmount } from "@/lib/format";
 
@@ -82,10 +82,12 @@ function TokenPanel({
 
 export function MigrationCard() {
   const { address, chainId, isConnected } = useAccount();
+  const { openConnectModal } = useConnectModal();
   const [ecosystem, setEcosystem] = useState<Ecosystem>("data");
   const [isTestnet, setIsTestnet] = useState(false);
   const [amountInput, setAmountInput] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [pendingSwap, setPendingSwap] = useState(false);
 
   const targetChainId = chainIdFor(ecosystem, isTestnet);
   const network = NETWORKS[targetChainId] as NetworkConfig;
@@ -104,6 +106,17 @@ export function MigrationCard() {
     query: { enabled: Boolean(address) && configured },
   });
 
+  // lockMint dispenses from a pre-funded reserve; read it so we can block an
+  // over-reserve amount up front instead of letting migrate() revert (which some
+  // RPCs surface as an opaque "gas limit too high" instead of insufficient reserve).
+  const reserve = useReadContract({
+    abi: migrationAbi,
+    address: network.migration,
+    functionName: "availableWdataip",
+    chainId: network.chain.id,
+    query: { enabled: network.flow === "lockMint" && Boolean(network.migration) },
+  });
+
   const amountWei = useMemo(() => {
     if (!amountInput) return 0n;
     try {
@@ -114,21 +127,47 @@ export function MigrationCard() {
   }, [amountInput, network.from.decimals]);
 
   const balanceValue = balance.data ?? 0n;
+  const reserveValue = reserve.data ?? 0n;
   const onWrongChain = isConnected && chainId !== network.chain.id;
   const exceedsBalance = amountWei > balanceValue;
+  const exceedsReserve =
+    network.flow === "lockMint" &&
+    Boolean(network.migration) &&
+    reserve.isSuccess &&
+    amountWei > reserveValue;
   const canSwap =
     isConnected &&
     !onWrongChain &&
     migrationReady &&
     amountWei > 0n &&
-    !exceedsBalance;
+    !exceedsBalance &&
+    !exceedsReserve;
 
   const swapLabel = (() => {
     if (!migrationReady) return "Migration unavailable";
     if (amountWei === 0n) return "Enter an amount";
     if (exceedsBalance) return "Insufficient balance";
+    if (exceedsReserve) return "Insufficient reserve";
     return `Swap to ${network.to.symbol}`;
   })();
+
+  // The Swap button connects the wallet first when disconnected, then proceeds
+  // to the migration once a connection lands (issue #1015: no silent no-op).
+  useEffect(() => {
+    if (pendingSwap && isConnected) {
+      setPendingSwap(false);
+      if (!onWrongChain && canSwap) setDialogOpen(true);
+    }
+  }, [pendingSwap, isConnected, onWrongChain, canSwap]);
+
+  const onPrimaryAction = () => {
+    if (!isConnected) {
+      setPendingSwap(true);
+      openConnectModal?.();
+      return;
+    }
+    setDialogOpen(true);
+  };
 
   return (
     <div className="w-full max-w-md rounded-[var(--radius-card)] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-6 shadow-2xl">
@@ -203,23 +242,19 @@ export function MigrationCard() {
       </div>
 
       <div className="mt-6">
-        {!isConnected ? (
-          <ConnectButton.Custom>
-            {({ openConnectModal }) => (
-              <Button className="w-full" onClick={openConnectModal}>
-                Connect Wallet
-              </Button>
-            )}
-          </ConnectButton.Custom>
-        ) : onWrongChain ? (
+        {onWrongChain ? (
           <UpdateRpcButton network={network} />
         ) : (
           <Button
             className="w-full"
-            disabled={!canSwap}
-            onClick={() => setDialogOpen(true)}
+            disabled={!migrationReady || (isConnected && !canSwap)}
+            onClick={onPrimaryAction}
           >
-            {swapLabel}
+            {isConnected
+              ? swapLabel
+              : migrationReady
+                ? `Swap to ${network.to.symbol}`
+                : "Migration unavailable"}
           </Button>
         )}
       </div>
@@ -228,9 +263,14 @@ export function MigrationCard() {
         <p className="mt-3 text-center text-xs text-[color:var(--color-muted)]">
           The migration contract for {network.chain.name} is not configured yet.
         </p>
+      ) : exceedsReserve ? (
+        <p className="mt-3 text-center text-xs text-[color:var(--color-danger)]">
+          Only {formatAmount(reserveValue, network.to.decimals)} {network.to.symbol}{" "}
+          left in the reserve right now.
+        </p>
       ) : null}
 
-      {dialogOpen && address ? (
+      {dialogOpen ? (
         <MigrationDialog
           network={network}
           amount={amountWei}
