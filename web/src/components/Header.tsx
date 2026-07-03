@@ -7,7 +7,7 @@ import { Logo } from "@/components/Logo";
 export function Header() {
   return (
     <header className="w-full border-b border-[color:var(--color-border)]">
-      <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
+      <div className="flex h-16 w-full items-center justify-between px-4 sm:px-8">
         <Logo />
         <ConnectButton
           accountStatus="address"

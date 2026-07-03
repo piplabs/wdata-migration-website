@@ -66,6 +66,8 @@ export function MigrationDialog({
   const explorer = network.chain.blockExplorers?.default.url;
   const currentStatus = statuses[current];
   const showRetry = currentStatus === "error";
+  const onOptionalAddStep =
+    Boolean(account) && !isComplete && Boolean(steps[current]?.isWatchAsset);
 
   const actionLabel = (() => {
     if (isComplete) return "Done";
@@ -157,6 +159,24 @@ export function MigrationDialog({
             <Button className="w-full" onClick={() => openConnectModal?.()}>
               Reconnect wallet
             </Button>
+          ) : onOptionalAddStep ? (
+            <div className="flex gap-3">
+              <Button className="flex-1" onClick={runCurrent} disabled={isBusy}>
+                {isBusy ? <Spinner /> : null}
+                {actionLabel}
+              </Button>
+              <Button
+                variant="secondary"
+                className="flex-1"
+                onClick={() => {
+                  onComplete();
+                  onClose();
+                }}
+                disabled={isBusy}
+              >
+                Close
+              </Button>
+            </div>
           ) : (
             <Button className="w-full" onClick={runCurrent} disabled={isBusy}>
               {isBusy ? <Spinner /> : null}

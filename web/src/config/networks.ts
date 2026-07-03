@@ -224,15 +224,6 @@ export const ALL_CHAINS: readonly [Chain, ...Chain[]] = [
 export const getNetwork = (chainId: number | undefined): NetworkConfig | undefined =>
   chainId === undefined ? undefined : NETWORKS[chainId];
 
-/** Resolve a target chain id from the ecosystem + environment selectors. */
-export const chainIdFor = (
-  ecosystem: "data" | "bsc",
-  isTestnet: boolean,
-): number => {
-  if (ecosystem === "data") return isTestnet ? aeneid.id : dataNetwork.id;
-  return isTestnet ? bscTestnet.id : bsc.id;
-};
-
 export const WALLET_CONNECT_PROJECT_ID = env(
   "NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID",
 );

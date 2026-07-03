@@ -47,7 +47,7 @@ function buildSteps(network: NetworkConfig): MigrationStep[] {
       {
         key: "addToken",
         title: `Add ${network.to.symbol} to wallet`,
-        description: `Track your ${network.to.symbol} balance in your wallet.`,
+        description: `Track your ${network.to.symbol} balance in your wallet. (Optional)`,
         isWatchAsset: true,
       },
     ];

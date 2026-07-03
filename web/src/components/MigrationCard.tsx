@@ -10,36 +10,61 @@ import { UpdateRpcButton } from "@/components/UpdateRpcButton";
 import { Button } from "@/components/ui/Button";
 import { BRAND } from "@/config/brand";
 import { erc20Abi, migrationAbi } from "@/config/abis";
-import { type NetworkConfig, NETWORKS, chainIdFor } from "@/config/networks";
+import { type NetworkConfig, NETWORKS, dataNetwork, getNetwork } from "@/config/networks";
 import { formatAmount } from "@/lib/format";
 
 type Ecosystem = "data" | "bsc";
 
-function SegmentedControl<T extends string>({
-  options,
-  value,
-  onChange,
+const WDATAIP_INFO =
+  "WDATAIP is the wrapped token's name on BNB Chain. It's fully 1:1 with WDATA and WIP.";
+
+function NetworkIndicator({
+  ecosystem,
+  isTestnet,
 }: {
-  options: { value: T; label: string }[];
-  value: T;
-  onChange: (value: T) => void;
+  ecosystem: Ecosystem;
+  isTestnet: boolean;
 }) {
+  const chainName = ecosystem === "bsc" ? "BNB Chain" : "Data Network";
   return (
-    <div className="flex rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg)] p-1">
-      {options.map((option) => (
-        <button
-          key={option.value}
-          onClick={() => onChange(option.value)}
-          className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-            value === option.value
-              ? "bg-[color:var(--color-surface-2)] text-[color:var(--color-fg)]"
-              : "text-[color:var(--color-muted)] hover:text-[color:var(--color-fg)]"
-          }`}
-        >
-          {option.label}
-        </button>
-      ))}
+    <div className="flex items-center justify-between rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg)] p-4">
+      <span className="text-xs uppercase tracking-wide text-[color:var(--color-muted)]">
+        Network
+      </span>
+      <div className="flex items-center gap-2">
+        <span
+          className="h-2 w-2 rounded-full"
+          style={{ backgroundColor: isTestnet ? "#fbbf24" : "var(--color-success)" }}
+        />
+        <span className="text-sm font-medium text-[color:var(--color-fg)]">
+          {chainName}
+        </span>
+        <span className="rounded-md bg-[color:var(--color-surface-2)] px-1.5 py-0.5 text-xs font-medium text-[color:var(--color-muted)]">
+          {isTestnet ? "Testnet" : "Mainnet"}
+        </span>
+      </div>
     </div>
+  );
+}
+
+function InfoTooltip({ text }: { text: string }) {
+  return (
+    <span className="group relative inline-flex">
+      <button
+        type="button"
+        aria-label={text}
+        className="inline-flex h-4 w-4 cursor-default items-center justify-center rounded-full border border-[color:var(--color-border-strong)] text-[10px] font-medium leading-none text-[color:var(--color-muted)] transition-colors hover:border-[color:var(--color-fg)]/40 hover:text-[color:var(--color-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-fg)]/40"
+      >
+        i
+      </button>
+      <span
+        role="tooltip"
+        className="pointer-events-none absolute bottom-full left-0 z-10 mb-2 w-56 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface-2)] px-3 py-2 text-xs font-normal leading-relaxed text-[color:var(--color-fg)] opacity-0 shadow-xl transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
+      >
+        {text}
+        <span className="absolute left-1.5 top-full h-2 w-2 -translate-y-1/2 rotate-45 border-b border-r border-[color:var(--color-border)] bg-[color:var(--color-surface-2)]" />
+      </span>
+    </span>
   );
 }
 
@@ -48,12 +73,15 @@ function TokenPanel({
   symbol,
   name,
   iconUrl,
+  info,
   children,
 }: {
   label: string;
   symbol: string;
   name: string;
   iconUrl: string;
+  /** Optional explainer shown as a tooltip on an info icon next to the symbol. */
+  info?: string;
   children?: React.ReactNode;
 }) {
   return (
@@ -72,7 +100,10 @@ function TokenPanel({
           className="h-8 w-8 rounded-full bg-[color:var(--color-surface-2)]"
         />
         <div>
-          <p className="text-sm font-semibold">{symbol}</p>
+          <p className="flex items-center gap-1.5 text-sm font-semibold">
+            {symbol}
+            {info ? <InfoTooltip text={info} /> : null}
+          </p>
           <p className="text-xs text-[color:var(--color-muted)]">{name}</p>
         </div>
       </div>
@@ -83,14 +114,15 @@ function TokenPanel({
 export function MigrationCard() {
   const { address, chainId, isConnected } = useAccount();
   const { openConnectModal } = useConnectModal();
-  const [ecosystem, setEcosystem] = useState<Ecosystem>("data");
-  const [isTestnet, setIsTestnet] = useState(false);
   const [amountInput, setAmountInput] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [pendingSwap, setPendingSwap] = useState(false);
 
-  const targetChainId = chainIdFor(ecosystem, isTestnet);
-  const network = NETWORKS[targetChainId] as NetworkConfig;
+  // The active network follows the connected wallet's chain; 
+  // the indicator can never drift out of sync with the network the
+  // user selected in the top-right wallet button. 
+  const network = (getNetwork(chainId) ?? NETWORKS[dataNetwork.id]) as NetworkConfig;
+  const { ecosystem, isTestnet } = network;
   const isZeroAddress = /^0x0{40}$/.test(network.from.address);
   const configured =
     !isZeroAddress && /^0x[0-9a-fA-F]{40}$/.test(network.from.address);
@@ -184,23 +216,8 @@ export function MigrationCard() {
         Swap your wrapped IP for wrapped DATA 1:1.
       </p>
 
-      <div className="mt-5 grid grid-cols-2 gap-3">
-        <SegmentedControl<Ecosystem>
-          options={[
-            { value: "data", label: "Data Network" },
-            { value: "bsc", label: "BNB Chain" },
-          ]}
-          value={ecosystem}
-          onChange={setEcosystem}
-        />
-        <SegmentedControl
-          options={[
-            { value: "main", label: "Mainnet" },
-            { value: "test", label: "Testnet" },
-          ]}
-          value={isTestnet ? "test" : "main"}
-          onChange={(value) => setIsTestnet(value === "test")}
-        />
+      <div className="mt-5">
+        <NetworkIndicator ecosystem={ecosystem} isTestnet={isTestnet} />
       </div>
 
       <div className="mt-4 space-y-2">
@@ -253,6 +270,7 @@ export function MigrationCard() {
           symbol={network.to.symbol}
           name={network.to.name}
           iconUrl={BRAND.token.WDATA.svg}
+          {...(network.to.symbol === "WDATAIP" ? { info: WDATAIP_INFO } : {})}
         />
       </div>
 
