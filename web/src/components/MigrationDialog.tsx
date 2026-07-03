@@ -1,5 +1,6 @@
 "use client";
 
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useEffect } from "react";
 import type { Address } from "viem";
 
@@ -12,7 +13,8 @@ import { formatAmount, txUrl } from "@/lib/format";
 interface MigrationDialogProps {
   network: NetworkConfig;
   amount: bigint;
-  account: Address;
+  /** Undefined when the wallet disconnects mid-flow; the dialog stays open and re-prompts. */
+  account: Address | undefined;
   onClose: () => void;
   onComplete: () => void;
 }
@@ -55,6 +57,7 @@ export function MigrationDialog({
 }: MigrationDialogProps) {
   const { steps, current, statuses, hashes, error, isComplete, isBusy, runCurrent } =
     useMigration(network, amount, account);
+  const { openConnectModal } = useConnectModal();
 
   useEffect(() => {
     if (isComplete) onComplete();
@@ -63,6 +66,8 @@ export function MigrationDialog({
   const explorer = network.chain.blockExplorers?.default.url;
   const currentStatus = statuses[current];
   const showRetry = currentStatus === "error";
+  const onOptionalAddStep =
+    Boolean(account) && !isComplete && Boolean(steps[current]?.isWatchAsset);
 
   const actionLabel = (() => {
     if (isComplete) return "Done";
@@ -135,7 +140,11 @@ export function MigrationDialog({
           })}
         </ol>
 
-        {error ? (
+        {!account && !isComplete ? (
+          <p className="mt-4 rounded-lg bg-[color:var(--color-danger)]/10 px-3 py-2 text-sm text-[color:var(--color-danger)]">
+            Wallet disconnected. Reconnect to continue the migration.
+          </p>
+        ) : error ? (
           <p className="mt-4 rounded-lg bg-[color:var(--color-danger)]/10 px-3 py-2 text-sm text-[color:var(--color-danger)]">
             {error}
           </p>
@@ -146,6 +155,28 @@ export function MigrationDialog({
             <Button className="w-full" onClick={onClose}>
               {actionLabel}
             </Button>
+          ) : !account ? (
+            <Button className="w-full" onClick={() => openConnectModal?.()}>
+              Reconnect wallet
+            </Button>
+          ) : onOptionalAddStep ? (
+            <div className="flex gap-3">
+              <Button className="flex-1" onClick={runCurrent} disabled={isBusy}>
+                {isBusy ? <Spinner /> : null}
+                {actionLabel}
+              </Button>
+              <Button
+                variant="secondary"
+                className="flex-1"
+                onClick={() => {
+                  onComplete();
+                  onClose();
+                }}
+                disabled={isBusy}
+              >
+                Close
+              </Button>
+            </div>
           ) : (
             <Button className="w-full" onClick={runCurrent} disabled={isBusy}>
               {isBusy ? <Spinner /> : null}
