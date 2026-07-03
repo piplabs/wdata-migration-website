@@ -32,10 +32,8 @@ function NetworkIndicator({
         Network
       </span>
       <div className="flex items-center gap-2">
-        <span
-          className="h-2 w-2 rounded-full"
-          style={{ backgroundColor: isTestnet ? "#fbbf24" : "var(--color-success)" }}
-        />
+        {/* Matches RainbowKit's "Connected" indicator green for consistency. */}
+        <span className="h-2 w-2 rounded-full bg-[#30E000]" />
         <span className="text-sm font-medium text-[color:var(--color-fg)]">
           {chainName}
         </span>
