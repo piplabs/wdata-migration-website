@@ -15,7 +15,7 @@
     "@rainbow-me/rainbowkit": "2.2.11",
     "@tanstack/react-query": "5.101.1",
     "@wagmi/core": "2.22.1",
-    "next": "16.2.9",
+    "next": "16.4.1",
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "viem": "2.53.1",
